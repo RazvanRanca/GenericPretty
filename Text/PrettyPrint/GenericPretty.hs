@@ -10,15 +10,19 @@ import Pretty (fullRender, Mode(..), TextDetails(..), Doc)
 import FastString
 import Data.Char
 
--- class Out is just a wrapper class for Outputable, it passes on the opperator precedence as an extra parameter
--- the methods out and outList mimick the behaviour of showPrec and showList
--- the default out method converts the generic type into a sum of products and passes it on to the generic
--- pretty printing functions, finally it concatenates all of the SDoc's using sep
+-- | The class 'Out' is just a wrapper class for 'Outputable', which passes an extra parameter used to determine
+-- when to wrap types up in parantheses
+-- There is a default out method which converts the type into a sum of products and passes it on to the generic
+-- pretty printing functions, finally it concatenates all of the SDoc's
 class Out a where
+  -- | 'out' is the equivalent of 'showPrec'
+  -- it generates output identical to show, except for the extra whitespace
   out :: Int -> a -> SDoc
   default out :: (Generic a ,GOut (Rep a)) => Int -> a -> SDoc
   out n x = sep $ out1 (from x) Pref n False
   
+  -- | 'outList' mimicks the behaviour of showList
+  -- used mainly to output strings correctly, and not as lists of characters
   outList :: Int -> [a] -> SDoc
   outList n xs = brackets (fsep (punctuate comma (map (out n) xs)))
 
@@ -28,18 +32,20 @@ instance (Outputable a) => Out a where
 	out n xs
 		| n > 0 = parens $ ppr xs
 		| otherwise = ppr xs
-		
+
 instance Out a => Outputable a where
 	ppr = out 0
 		
--- 2 helper functions follow
--- get the list without the first and last elements
+-- 'middle' return a list without it's first and last elements
+-- except if the list has a single element, in which case it returns the list unchanged
 middle :: [a] -> [a]
 middle [] = []
 middle [x] = [x]
 middle (x:xs) = init xs
 
--- wrap the value in parens if bool is true
+-- 'wrapParens' wraps the passed value in parens if the bool is true
+-- we don't want a single paren to possibly take a whole line, so we concatenate them to the first
+-- and last elements in the list, instead of just adding them to the list
 wrapParens :: Bool -> [SDoc] -> [SDoc]
 wrapParens _ [] = []
 wrapParens False s = s
@@ -47,15 +53,21 @@ wrapParens True s
       | length s == 1 = [lparen <> head s <> rparen]
       |otherwise = [lparen <> head s] ++ middle s ++ [last s <> rparen]
 		
--- the types of data we consider for product operator.
--- tuples aren't considered since they're directly Outputable
+-- The types of data we need to consider for product operator. Record, Prefix and Infix.
+-- Tuples aren't considered since they're already instances of 'Out' and thus won't pass through that code.
 data Type = Rec | Pref | Inf String
 
--- helper class used to output the Sum-of-Products type(it has kind *->*, so can't be an instance of Outputable)
--- outputs [SDoc] , each element in the list could potentially be on a new line, depending on available space
--- isNullary used just to mark nullary constructors
+--'GOut' is a helper class used to output the Sum-of-Products type, since it has kind *->*, 
+-- so can't be an instance of 'Out'
 class GOut f where
-  out1 :: f x -> Type -> Int -> Bool -> [SDoc]
+  -- |'out1' is the (*->*) kind equivalent of 'out'
+  out1 :: f x 		-- The sum of products representation of the user's custom type
+		  -> Type   -- The type of multiplication. Record, Prefix or Infix.
+		  -> Int    -- The operator precedence, determines wether to wrap stuff in parens.
+		  -> Bool   -- A flag, marks wether the constructor directly above was wrapped in parens.
+					-- Used to determine correct indentation
+		  -> [SDoc] -- The result. Each SDoc could be on a newline, depending on available space.
+  -- |'isNullary' marks nullary constructors, so that we don't put parens around them
   isNullary :: f x -> Bool
   
 -- if empty, output nothing, this is a null constructor
@@ -78,18 +90,18 @@ instance (GOut f, Selector c) => GOut (M1 S c f) where
 	
   isNullary (M1 a) = isNullary a
   
--- constructor, if infix posibly put in parens
--- if prefix add the constructor name, nest the result and possibly put it in parens
--- check for infix constructors that act like prefix due to records, add parens around them
+-- constructor
 -- here the real type and parens flag is set and propagated forward via t and n, the precedence factor is updated
 instance (GOut f, Constructor c) => GOut (M1 C c f) where
   out1 c@(M1 a) _ d p = 
     case fixity of
+	  -- if prefix add the constructor name, nest the result and possibly put it in parens
       Prefix -> wrapParens boolParens $ text name: makeMargins t boolParens (out1 a t 11 boolParens)
+	  -- if infix posibly put in parens
       Infix _ m -> wrapParens (d>m) $ out1 a t (m+1) (d>m)
       where 
         boolParens = d>10 && not (isNullary a)
-        name = checkInfix $ conName c
+		name = checkInfix $ conName c
         fixity = conFixity c
         -- get the type of the data, Record, Infix or Prefix. 
         t = if conIsRecord c then Rec else
@@ -106,7 +118,7 @@ instance (GOut f, Constructor c) => GOut (M1 C c f) where
 							map (nest $ length name + 2) (middle s ++ [last s <> rbrace])
         makeMargins _ b s = map (nest $ length name + if b then 2 else 1) s
                 
-        -- check for infix operators that are acting like prefix ones, put them in parens
+        -- check for infix operators that are acting like prefix ones due to records, put them in parens
         checkInfix :: String -> String
         checkInfix [] = []
         checkInfix (x:xs)
@@ -128,13 +140,13 @@ instance (GOut f, GOut g) => GOut (f :+: g) where
   isNullary (R1 a) = isNullary a
   
 -- output both sides of the product, possible separated by a comma or an infix operator
--- if infix, nest the second value since it isn't nested in the constructor
 instance (GOut f, GOut g) => GOut (f :*: g) where
   out1 (f :*: g) t@Rec d p = init pfn ++ [last pfn <> comma] ++ pgn
     where 
       pfn = out1 f t d p
       pgn = out1 g t d p
-      
+	  
+  -- if infix, nest the second value since it isn't nested in the constructor    
   out1 (f :*: g) t@(Inf s) d p = init pfn ++ [last pfn <+> text s] ++ checkIndent pgn
     where
       pfn = out1 f t d p
@@ -159,14 +171,22 @@ instance (GOut f, GOut g) => GOut (f :*: g) where
   
   isNullary _ = False
 				
--- fully customizable pretty printer
--- takes object to print, "Outputable" style, "Pretty" mode, line length, ribbons/line, how to handle text, end element
-fullPP :: (Out a) => a -> PprStyle -> Mode -> Int -> Float -> (TextDetails -> b -> b) -> b -> b
+-- | 'fullPP' is a fully customizable Pretty Printer.
+
+fullPP :: (Out a) => a 							-- The value to pretty print
+					 -> PprStyle 				-- The 'Outputable' library style to use
+					 -> Mode 					-- The 'Pretty' library style(mode) to use
+					 -> Int 					-- The maximum line length
+					 -> Float 					-- The number of ribbons per line
+					 -> (TextDetails -> b -> b) -- Function that handles the text conversion (2 examples are included)
+					 -> b 						-- The end element of the result( eg: "" or putChar('\n') )
+					 -> b						-- The pretty printed result
 fullPP a pstyle mode len rib td end = fullRender mode len rib td end doc
   where
     doc = withPprStyleDoc pstyle (out 0 a)
 
--- tells fullPP what to do with text, namely transform into string and output it directly
+-- | 'outputTxt' transforms the text into strings and outputs it directly.
+-- This is one example of a function that can handle the text conversion for 'fullPP'.
 outputTxt :: TextDetails -> IO() -> IO()
 outputTxt td act =  do
                       putStr $ decode td
@@ -178,7 +198,8 @@ outputTxt td act =  do
     decode (Chr c)  = [c]
     decode (Str s) = s
     
--- another way to handle text, leave it as a string
+-- | 'outputStr' just leaves the text as a string.
+-- Another example of a function that can handle the text conversion for 'fullPP'.
 outputStr :: TextDetails -> String -> String
 outputStr td str = decode td ++ str
   where
@@ -188,20 +209,23 @@ outputStr td str = decode td ++ str
     decode (Chr c)  = [c]
     decode (Str s) = s
     
--- get the pretty string, used for testing against show
+-- | 'prettyStr' returns the result as a string. 
+-- The returned value is identical to one made by 'show', except for the extra whitespace
 prettyStr :: (Out a) => a -> String
 prettyStr a = fullPP a defaultUserStyle PageMode 80 1.5 outputStr ""
 
--- semi-customizable pretty printer, set line length and ribbons/line
+-- | 'prettyP' is a partly customizable Pretty Printer
+-- It takes the line length and ribbons per line as parameters
 prettyP :: (Out a) => Int -> Float -> a -> IO()
 prettyP len rib a = fullPP a defaultUserStyle PageMode len rib outputTxt (putChar '\n')
 
--- default pretty printer, line length of 80 and 1.5 ribbons/line(= 53 non-whitespace chars/line)
+-- | 'pp' is the default Pretty Printer,
+-- it uses a line length of 80 and 1.5 ribbons/line(= 53 non-whitespace chars/line)
 -- ribbon = max length of text, excluding whitespace, on a single line
 pp :: (Out a) => a -> IO()
 pp = prettyP 80 1.5
 
--- define some instances of Out
+-- define some instances of Out making sure to generate output identical to 'show' modulo the extra whitespace
 instance Out Char where
 	out _ a = char '\'' <> (text.middle.show $ a) <> char '\''
 	outList _ xs = text $ show xs
