@@ -51,11 +51,12 @@ Library
   Exposed-modules:     GenericPretty
   
   -- Packages needed in order to build this package.
-  -- Build-depends:       
+  Build-depends: 	   base >= 3 && < 5, ghc-prim, ghc   
   
   -- Modules not exported by this package.
   -- Other-modules:       
   
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:         
+  -- Build-tools: 
+  
   
