@@ -4,8 +4,8 @@
 Properties are provided for each that specify that the output given by 'prettyStr' and that given
 by 'show' should be identical except for the whitespace 
 
-The different data types follow the same pattern of implementation and functions, so most of them are
-only comented for the first data type -}
+The different data types follow the same pattern of implementation and functions, so most of the
+functions are only commented for the first data type -}
 
 import Text.PrettyPrint.GenericPretty
 import Test.QuickCheck
