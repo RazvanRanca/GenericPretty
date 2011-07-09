@@ -1,0 +1,75 @@
+GenericPretty. A Generic, Derivable, Haskell Pretty Printer
+===============================================================================
+
+GenericPretty is a haskell library that provides support for automatic
+derivation of pretty printing functions on user defined data types.
+
+The output provided by the library functions is identical to that of Prelude.show, 
+except it has extra whitespace.
+
+I find examples are the best aid in understanding. So, here is a possible 
+haskell source file, called 'SimpleTest.hs'
+----------------------------------------------------
+{-# LANGUAGE DeriveGeneric #-}
+
+import Text.PrettyPrint.GenericPretty
+
+data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
+instance (Out a) => Out (Tree a)
+
+tree1 :: Tree Int
+tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 
+		(Leaf 57575757))(Leaf (-14141414)))(Leaf 7777777))
+			
+main = pp tree1
+------------------------------------------------
+The flag DeriveGeneric must be given to ghc. This can be done as above, 
+in a 'LANGUAGE' pragma, or manually by compiling with 'ghc -XDeriveGeneric'.
+
+As can be seen, to use the library one must simply import it, derive 'Generic' 
+on the custom data type, and write an empty instance of 'Out'.
+
+Then one can use the pretty printing functions, such as 'pp' and 'prettyP'.
+
+Compiling and running the file is simple and gives the following result.
+-----------------------------
+$ ghc SimpleTest.hs
+[1 of 1] Compiling Main             ( SimpleTest.hs, SimpleTest.o )
+Linking SimpleTest.exe ...
+
+$ SimpleTest
+Node (Node (Leaf 333333) (Leaf (-555555)))
+     (Node (Node (Node (Leaf 888888) (Leaf 57575757))
+                 (Leaf (-14141414)))
+           (Leaf 7777777))
+---------------------------
+If we replaced the main function with 'main = prettyP 30 1 tree1', 
+the result would instead be:
+
+Node (Node (Leaf 333333)
+           (Leaf (-555555)))
+     (Node (Node (Node (Leaf 888888)
+                       (Leaf 57575757))
+                 (Leaf (-14141414)))
+           (Leaf 7777777))
+		   
+In this case the output tries to remain under 30 characters/line if possible, 
+while maintaining correct indentation.
+
+------Note---------
+The defined pretty printing functions work with any type that implements
+'Out' OR 'Outputable'. 
+This is so that if the data type that is using the deriving mechanism
+relies on some other data type that can't, if the inner type implements 
+'Outputable', then the deriving still works.
+-------------------
+
+The above 'Tree' example can be found in 'TestSuite/SimpleTest.hs'.
+More involved examples integrated with QuickCheck can be found in 'TestSuite/Tests.hs'.
+
+Further information can be found in the haddock generated API at dist/doc/html
+and in the source code itself.
+===============================================================================
+
+Please send any questions/suggestions to:
+Razvan Ranca <ranca.razvan@gmail.com>

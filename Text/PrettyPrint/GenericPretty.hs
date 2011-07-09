@@ -1,7 +1,17 @@
 {-# LANGUAGE TypeOperators, FlexibleInstances, FlexibleContexts, DefaultSignatures,
 	OverlappingInstances, UndecidableInstances #-}
 
-module Text.PrettyPrint.GenericPretty(pp, prettyP, fullPP, prettyStr, Generic, Out(..)) where
+{-|
+GenericPretty is a haskell library that provides support for automatic
+derivation of pretty printing functions on user defined data types.
+The Outputable library is used underneath, the work is done over SDoc types. 
+
+The output provided by the library functions is identical to that of Prelude.show, 
+except it has extra whitespace.
+
+For examples of usage please see the README file. -}
+
+module Text.PrettyPrint.GenericPretty(pp, prettyP, prettyStr, fullPP, outputTxt, outputStr, Generic, Out(..)) where
 
 import Data.List
 import Outputable
@@ -10,18 +20,18 @@ import Pretty (fullRender, Mode(..), TextDetails(..), Doc)
 import FastString
 import Data.Char
 
--- | The class 'Out' is just a wrapper class for 'Outputable', which passes an extra parameter used to determine
+-- | The class 'Out' is just a wrapper class for Outputable, which passes an extra parameter used to determine
 -- when to wrap types up in parantheses
--- There is a default out method which converts the type into a sum of products and passes it on to the generic
--- pretty printing functions, finally it concatenates all of the SDoc's
 class Out a where
-  -- | 'out' is the equivalent of 'showPrec'
+  -- | 'out' is the equivalent of Prelude.showsPrec
   -- it generates output identical to show, except for the extra whitespace
   out :: Int -> a -> SDoc
+  -- default out method, converts the type into a sum of products and passes it on to the generic
+  -- pretty printing functions, finally it concatenates all of the SDoc's
   default out :: (Generic a ,GOut (Rep a)) => Int -> a -> SDoc
   out n x = sep $ out1 (from x) Pref n False
   
-  -- | 'outList' mimicks the behaviour of showList
+  -- | 'outList' mimicks the behaviour of Prelude.showList
   -- used mainly to output strings correctly, and not as lists of characters
   outList :: Int -> [a] -> SDoc
   outList n xs = brackets (fsep (punctuate comma (map (out n) xs)))
@@ -89,19 +99,19 @@ instance (GOut f, Selector c) => GOut (M1 S c f) where
 		selector = selName s
 	
   isNullary (M1 a) = isNullary a
-  
+
 -- constructor
 -- here the real type and parens flag is set and propagated forward via t and n, the precedence factor is updated
 instance (GOut f, Constructor c) => GOut (M1 C c f) where
   out1 c@(M1 a) _ d p = 
     case fixity of
-	  -- if prefix add the constructor name, nest the result and possibly put it in parens
+      -- if prefix add the constructor name, nest the result and possibly put it in parens
       Prefix -> wrapParens boolParens $ text name: makeMargins t boolParens (out1 a t 11 boolParens)
 	  -- if infix posibly put in parens
       Infix _ m -> wrapParens (d>m) $ out1 a t (m+1) (d>m)
       where 
-        boolParens = d>10 && not (isNullary a)
-		name = checkInfix $ conName c
+        boolParens = d>10 && (not $ isNullary a)
+        name = checkInfix $ conName c
         fixity = conFixity c
         -- get the type of the data, Record, Infix or Prefix. 
         t = if conIsRecord c then Rec else
@@ -173,14 +183,14 @@ instance (GOut f, GOut g) => GOut (f :*: g) where
 				
 -- | 'fullPP' is a fully customizable Pretty Printer.
 
-fullPP :: (Out a) => a 							-- The value to pretty print
-					 -> PprStyle 				-- The 'Outputable' library style to use
-					 -> Mode 					-- The 'Pretty' library style(mode) to use
-					 -> Int 					-- The maximum line length
-					 -> Float 					-- The number of ribbons per line
-					 -> (TextDetails -> b -> b) -- Function that handles the text conversion (2 examples are included)
-					 -> b 						-- The end element of the result( eg: "" or putChar('\n') )
-					 -> b						-- The pretty printed result
+fullPP :: (Out a) => a 							-- ^The value to pretty print
+					 -> PprStyle 				-- ^The Outputable library style to use /(default is defaultUserStyle)/
+					 -> Mode 					-- ^The 'Pretty' library style(mode) to use /(default is PageMode)/
+					 -> Int 					-- ^The maximum line length
+					 -> Float 					-- ^The number of ribbons per line
+					 -> (TextDetails -> b -> b) -- ^Function that handles the text conversion /(default is 'outputTxt')/
+					 -> b 						-- ^The end element of the result /( eg: "" or putChar('\n') )/
+					 -> b						-- ^The pretty printed result
 fullPP a pstyle mode len rib td end = fullRender mode len rib td end doc
   where
     doc = withPprStyleDoc pstyle (out 0 a)
@@ -210,7 +220,7 @@ outputStr td str = decode td ++ str
     decode (Str s) = s
     
 -- | 'prettyStr' returns the result as a string. 
--- The returned value is identical to one made by 'show', except for the extra whitespace
+-- The returned value is identical to one made by Prelude.show, except for the extra whitespace
 prettyStr :: (Out a) => a -> String
 prettyStr a = fullPP a defaultUserStyle PageMode 80 1.5 outputStr ""
 
@@ -220,8 +230,8 @@ prettyP :: (Out a) => Int -> Float -> a -> IO()
 prettyP len rib a = fullPP a defaultUserStyle PageMode len rib outputTxt (putChar '\n')
 
 -- | 'pp' is the default Pretty Printer,
--- it uses a line length of 80 and 1.5 ribbons/line(= 53 non-whitespace chars/line)
--- ribbon = max length of text, excluding whitespace, on a single line
+-- it uses a line length of 80 and 1.5 ribbons per line /(= 53 non-whitespace chars per line)/
+-- where ribbon is defined as the maximum length of text, excluding whitespace, on a single line
 pp :: (Out a) => a -> IO()
 pp = prettyP 80 1.5
 

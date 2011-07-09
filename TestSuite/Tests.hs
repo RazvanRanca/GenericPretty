@@ -17,7 +17,7 @@ import Text.Printf
 removeSpaces :: String -> String
 removeSpaces [] = []
 removeSpaces (x:xs)
-  | x == ' ' || x == '\n' = removeSpaces xs
+  | x `elem` " \n" = removeSpaces xs
   | otherwise = x : removeSpaces xs
   
 -- checks the output of a specific value
@@ -26,7 +26,7 @@ checkOutput a = removeSpaces (prettyStr a) == removeSpaces (show a)
 
 -- Finite State Machine Type
 data FSM q = FSMCons ([q], Alphabet, q, [q], [Transition q]) deriving (Show, Generic)
-type Alphabet = [Char] 
+type Alphabet = String
 type Transition q = (q, Char, q)
 
 -- implement 'Out' so we can pretty print
@@ -38,12 +38,12 @@ instance Arbitrary a => Arbitrary (FSM a) where
 
 -- check wether 'Maybe Int' FSM's are outputed the same via prettyStr and show (modulo the whitespace) 
 checkFSM :: FSM (Maybe Int) -> FSM (Maybe Int) -> Bool
-checkFSM a = \a -> removeSpaces (prettyStr a) == removeSpaces (show a)
+checkFSM _ a = removeSpaces (prettyStr a) == removeSpaces (show a)
 
 -- example of an FSM, you can check the output of this manually with 'checkOutput'
 f :: FSM Int
 f = FSMCons([0,1,2,3,4],
-      ['a','b'],
+      "ab",
       0,
       [4],
       [(0,'a',1), (0,'b',1), (0,'a',2), (0,'b',2),
@@ -65,7 +65,7 @@ instance (Arbitrary a) => Arbitrary (BinaryTree a) where
 					subTree = arbitTree (n `div` 2)
 
 checkBinaryTree :: BinaryTree Char -> BinaryTree Char -> Bool
-checkBinaryTree a = \a -> removeSpaces (prettyStr a) == removeSpaces (show a)
+checkBinaryTree _ a = removeSpaces (prettyStr a) == removeSpaces (show a)
 
 -- functions for the construction of BinaryTrees					
 singleton :: a -> BinaryTree a  
@@ -104,7 +104,7 @@ instance (Arbitrary a) => Arbitrary (RecordTree a) where
 					childList = resize (floor.sqrt.fromIntegral $ n) (listOf (arbitTree (n`div` 2)) )
 
 checkRecordTree :: RecordTree String -> RecordTree String -> Bool
-checkRecordTree a = \a -> removeSpaces (prettyStr a) == removeSpaces (show a)
+checkRecordTree _ a = removeSpaces (prettyStr a) == removeSpaces (show a)
 					
 rt :: RecordTree Int
 rt = RNode (-656565) [RNode 33344 [], RNode 98789 [RNode (-766444) [], RNode 454545 [], RNode 59996 []]]
@@ -131,11 +131,11 @@ nt = ILeaf 5454544 55 :*: (ILeaf 5375738 44 :+: ((ILeaf 699879 55 :*: ILeaf 2332
 		:*: ILeaf 99999 88) ) :+: ILeaf 555 666
 
 checkInfixTree :: InfixTree (Either Int Char) -> InfixTree (Either Int Char) -> Bool
-checkInfixTree a = \a -> removeSpaces (prettyStr a) == removeSpaces (show a)
+checkInfixTree _ a = removeSpaces (prettyStr a) == removeSpaces (show a)
 	
 infixr 5 :^:
 -- infix and record tree, also uses a second user defined type in it's definition, 'Wrap'
-data InfixRecordTree a = IRLeaf (Wrap a) | (:^:) {left :: (InfixRecordTree a), right :: (InfixRecordTree a)} 
+data InfixRecordTree a = IRLeaf (Wrap a) | (:^:) {left :: InfixRecordTree a, right :: InfixRecordTree a} 
 			deriving (Show, Generic)  
 instance (Out a) => Out (InfixRecordTree a)
 	
@@ -154,7 +154,7 @@ irt = IRLeaf  (Wrap 5454544) :^: (IRLeaf (Wrap (-5375738)) :^: ((IRLeaf  (Wrap 6
 		(IRLeaf (Wrap (-2332323)) :^: IRLeaf (Wrap 676765))) :^: IRLeaf (Wrap 99999)))
 
 checkInfixRecordTree :: InfixRecordTree Int -> InfixRecordTree Int -> Bool
-checkInfixRecordTree a = \a -> removeSpaces (prettyStr a) == removeSpaces (show a)
+checkInfixRecordTree _ a = removeSpaces (prettyStr a) == removeSpaces (show a)
 	
 -- just a very simple user defined type that is used in IRTree
 -- note, we could manually make 'Wrap' an instance of 'Outputable' instead of 
