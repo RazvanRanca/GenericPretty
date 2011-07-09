@@ -24,13 +24,13 @@ Description:
 	For more info and examples of usage please see the README file and the API.      
 
 -- URL for the project homepage or repository.
-source-repository:            https://github.com/HaggisMcMutton/GenericPretty
+Homepage:            https://HaggisMcMutton@github.com/HaggisMcMutton/GenericPretty.git
 
 -- The license under which the package is released.
 License:             BSD3
 
 -- The file containing the license text.
-License-file:        LICENSE
+License-file:        LICENSE	
 
 -- The package author(s).
 Author:              Razvan Ranca
@@ -51,7 +51,7 @@ Build-type:          Simple
 Extra-source-files: README TestSuite  
 
 -- Constraint on the version of Cabal needed to build this package.
-Cabal-version:       >=1.2
+Cabal-version:       >=1.6
 
 
 Library
@@ -59,7 +59,7 @@ Library
   Exposed-modules:     Text.PrettyPrint.GenericPretty
   
   -- Packages needed in order to build this package.
-  Build-depends: 	   base >= 3 && < 5, ghc-prim, ghc >= 7.1.20110601  
+  Build-depends: 	   base >= 3 && < 5, ghc-prim, ghc >= 7.1.20110601
   
   -- Modules not exported by this package.
   -- Other-modules:       
@@ -67,4 +67,6 @@ Library
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   -- Build-tools: 
   
-  
+source-repository head
+    type:      git
+    location:  https://HaggisMcMutton@github.com/HaggisMcMutton/GenericPretty.git
