@@ -21,7 +21,7 @@ import FastString
 import Data.Char
 
 -- | The class 'Out' is just a wrapper class for Outputable, which passes an extra parameter used to determine
--- when to wrap types up in parantheses
+-- when to wrap types up in parentheses
 class Out a where
   -- | 'out' is the equivalent of Prelude.showsPrec
   -- it generates output identical to show, except for the extra whitespace
@@ -31,7 +31,7 @@ class Out a where
   default out :: (Generic a ,GOut (Rep a)) => Int -> a -> SDoc
   out n x = sep $ out1 (from x) Pref n False
   
-  -- | 'outList' mimicks the behaviour of Prelude.showList
+  -- | 'outList' mimics the behaviour of Prelude.showList
   -- used mainly to output strings correctly, and not as lists of characters
   outList :: Int -> [a] -> SDoc
   outList n xs = brackets (fsep (punctuate comma (map (out n) xs)))
@@ -107,7 +107,7 @@ instance (GOut f, Constructor c) => GOut (M1 C c f) where
     case fixity of
       -- if prefix add the constructor name, nest the result and possibly put it in parens
       Prefix -> wrapParens boolParens $ text name: makeMargins t boolParens (out1 a t 11 boolParens)
-	  -- if infix posibly put in parens
+	  -- if infix possibly put in parens
       Infix _ m -> wrapParens (d>m) $ out1 a t (m+1) (d>m)
       where 
         boolParens = d>10 && (not $ isNullary a)
@@ -164,7 +164,7 @@ instance (GOut f, GOut g) => GOut (f :*: g) where
       
       -- if the second value of the :*: is in parens, nest it
 	  -- needs to get the string representation of the first elements in the left and right SDoc lists 
-	  -- to be able to determnine the correct indentation
+	  -- to be able to determine the correct indentation
       checkIndent :: [SDoc] -> [SDoc]
       checkIndent [] = []
       checkIndent m@(x:xs)
