@@ -7,24 +7,26 @@ Name:                GenericPretty
 -- The package version. See the Haskell package versioning policy
 -- (http://www.haskell.org/haskellwiki/Package_versioning_policy) for
 -- standards guiding when and how versions should be incremented.
-Version:             0.1.0
+Version:             0.1.1
 
 -- A short (one-line) description of the package.
 Synopsis:            A generic, derivable, haskell pretty printer.
 
 -- A longer description of the package.
-Description: 	
-	GenericPretty is a haskell library that provides support for automatic
+Description: GenericPretty is a haskell library that provides support for automatic
 	derivation of pretty printing functions on user defined data types.
-	The Outputable library is used underneath, the work is done over SDoc types. 
-
+	The Outputable library is used underneath, the work is done over SDoc types.
+	.	
 	The output provided by the library functions is identical to that of Prelude.show, 
 	except it has extra whitespace.
-
-	For more info and examples of usage please see the README file and the API.      
+	.	
+	This requires the use of the new GHC.Generics features: <http://www.haskell.org/haskellwiki/Generics>.
+	These seem to be present in the GHC HEAD development snapshots >= 7.1.20110601.
+	.
+	For more info and examples of usage please see the README file and the API.
 
 -- URL for the project homepage or repository.
-Homepage:            https://HaggisMcMutton@github.com/HaggisMcMutton/GenericPretty.git
+Homepage:            https://github.com/HaggisMcMutton/GenericPretty
 
 -- The license under which the package is released.
 License:             BSD3
@@ -59,8 +61,8 @@ Library
   Exposed-modules:     Text.PrettyPrint.GenericPretty
   
   -- Packages needed in order to build this package.
-  Build-depends: 	   base >= 3 && < 5, ghc-prim, ghc >= 7.1.20110601
-  
+  Build-depends: 	   base >= 3 && < 5, ghc-prim, ghc >= 7.0
+  --ghc >= 7.1.20110601
   -- Modules not exported by this package.
   -- Other-modules:       
   
@@ -69,4 +71,4 @@ Library
   
 source-repository head
     type:      git
-    location:  https://HaggisMcMutton@github.com/HaggisMcMutton/GenericPretty.git
+    location:  git@github.com:HaggisMcMutton/GenericPretty.git
