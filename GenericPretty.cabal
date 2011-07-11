@@ -7,7 +7,7 @@ Name:                GenericPretty
 -- The package version. See the Haskell package versioning policy
 -- (http://www.haskell.org/haskellwiki/Package_versioning_policy) for
 -- standards guiding when and how versions should be incremented.
-Version:             0.1.2
+Version:             0.1.3
 
 -- A short (one-line) description of the package.
 Synopsis:            A generic, derivable, haskell pretty printer.
@@ -23,7 +23,7 @@ Description: GenericPretty is a haskell library that provides support for automa
 	This requires the use of the new GHC.Generics features: <http://www.haskell.org/haskellwiki/Generics>.
 	These seem to be present in the GHC HEAD development snapshots >= 7.1.20110601.
 	.
-	For more info and examples of usage please see the README file and the API.
+	For more info and examples of usage please see the README file and the API at doc/html.
 
 -- URL for the project homepage or repository.
 Homepage:            https://github.com/HaggisMcMutton/GenericPretty
@@ -50,7 +50,7 @@ Build-type:          Simple
 
 -- Extra files to be distributed with the package, such as examples or
 -- a README.
-Extra-source-files: README TestSuite\SimpleTest.hs TestSuite\Tests.hs
+Extra-source-files: README TestSuite\SimpleTest.hs TestSuite\Tests.hs doc
 
 -- Constraint on the version of Cabal needed to build this package.
 Cabal-version:       >=1.6
@@ -61,8 +61,8 @@ Library
   Exposed-modules:     Text.PrettyPrint.GenericPretty
   
   -- Packages needed in order to build this package.
-  Build-depends: 	   base >= 3 && < 5, ghc-prim, ghc >= 7.0
-  --ghc >= 7.1.20110601
+  Build-depends: 	   base >= 3 && < 5, ghc-prim, ghc >= 7.1.20110601
+  
   -- Modules not exported by this package.
   -- Other-modules:       
   
