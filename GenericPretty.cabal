@@ -23,7 +23,7 @@ Description: GenericPretty is a haskell library that provides support for automa
 	This requires the use of the new GHC.Generics features: <http://www.haskell.org/haskellwiki/Generics>.
 	These seem to be present in the GHC HEAD development snapshots >= 7.1.20110601.
 	.
-	For more info and examples of usage please see the README file and the API at doc/html.
+	For more info and examples of usage please see the README file and the API at http://haggismcmutton.github.com/GenericPretty/
 
 -- URL for the project homepage or repository.
 Homepage:            https://github.com/HaggisMcMutton/GenericPretty

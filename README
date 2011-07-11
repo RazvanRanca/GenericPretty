@@ -69,8 +69,8 @@ relies on some other data type that can't, if the inner type implements
 The above 'Tree' example can be found in 'TestSuite/SimpleTest.hs'.
 More involved examples integrated with QuickCheck can be found in 'TestSuite/Tests.hs'.
 
-Further information can be found in the API at doc/html
-and in the source code itself.
+Further information can be found in the API at 
+http://haggismcmutton.github.com/GenericPretty/ and in the source code itself.
 ===============================================================================
 
 Please send any questions/suggestions to:
