@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, FlexibleInstances, FlexibleContexts, DefaultSignatures,
+{-# LANGUAGE TypeOperators, FlexibleInstances, FlexibleContexts,
 	OverlappingInstances, UndecidableInstances #-}
 
 {-|
@@ -11,7 +11,7 @@ except it has extra whitespace.
 
 For examples of usage please see the README file. -}
 
-module Text.PrettyPrint.GenericPretty(pp, prettyP, prettyStr, fullPP, outputTxt, outputStr, Generic, Out(..)) where
+module Text.PrettyPrint.GenericPretty(pp, prettyP, prettyStr, fullPP, outputTxt, outputStr, Generic, Out(..), genOut) where
 
 import Data.List
 import Outputable
@@ -26,15 +26,17 @@ class Out a where
   -- | 'out' is the equivalent of Prelude.showsPrec
   -- it generates output identical to show, except for the extra whitespace
   out :: Int -> a -> SDoc
-  -- default out method, converts the type into a sum of products and passes it on to the generic
-  -- pretty printing functions, finally it concatenates all of the SDoc's
-  default out :: (Generic a ,GOut (Rep a)) => Int -> a -> SDoc
-  out n x = sep $ out1 (from x) Pref n False
-  
+      
   -- | 'outList' mimics the behaviour of Prelude.showList
   -- used mainly to output strings correctly, and not as lists of characters
   outList :: Int -> [a] -> SDoc
   outList n xs = brackets (fsep (punctuate comma (map (out n) xs)))
+
+-- | default out method, converts the type into a sum of products and passes it on to the generic
+-- pretty printing functions, finally it concatenates all of the SDoc's
+-- method user must use when implementing 'Out' by saying 'out = genOut'
+genOut :: (Generic a ,GOut (Rep a)) => Int -> a -> SDoc
+genOut n x = sep $ out1 (from x) Pref n False
 
 -- user-defined types that directly implement Outputable are handled here
 -- n marks wether the type needs to be surrounded by parens or not

@@ -15,7 +15,9 @@ haskell source file, called 'SimpleTest.hs'
 import Text.PrettyPrint.GenericPretty
 
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
-instance (Out a) => Out (Tree a)
+
+instance (Out a) => Out (Tree a) where
+	out = genOut
 
 tree1 :: Tree Int
 tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 
@@ -27,7 +29,7 @@ The flag DeriveGeneric must be given to ghc. This can be done as above,
 in a 'LANGUAGE' pragma, or manually by compiling with 'ghc -XDeriveGeneric'.
 
 As can be seen, to use the library one must simply import it, derive 'Generic' 
-on the custom data type, and write an empty instance of 'Out'.
+on the custom data type, and write an instance of 'Out' using 'genOut'.
 
 Then one can use the pretty printing functions, such as 'pp' and 'prettyP'.
 
