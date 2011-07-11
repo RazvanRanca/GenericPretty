@@ -69,7 +69,7 @@ relies on some other data type that can't, if the inner type implements
 The above 'Tree' example can be found in 'TestSuite/SimpleTest.hs'.
 More involved examples integrated with QuickCheck can be found in 'TestSuite/Tests.hs'.
 
-Further information can be found in the haddock generated API at dist/doc/html
+Further information can be found in the API at doc/html
 and in the source code itself.
 ===============================================================================
 

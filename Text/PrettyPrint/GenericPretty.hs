@@ -32,9 +32,8 @@ class Out a where
   outList :: Int -> [a] -> SDoc
   outList n xs = brackets (fsep (punctuate comma (map (out n) xs)))
 
--- | default out method, converts the type into a sum of products and passes it on to the generic
--- pretty printing functions, finally it concatenates all of the SDoc's
--- method user must use when implementing 'Out' by saying 'out = genOut'
+-- | default, generic, 'out' method.
+-- User must use this when implementing 'Out' by typing 'out = genOut'
 genOut :: (Generic a ,GOut (Rep a)) => Int -> a -> SDoc
 genOut n x = sep $ out1 (from x) Pref n False
 
