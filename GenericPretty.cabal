@@ -7,7 +7,7 @@ Name:                GenericPretty
 -- The package version. See the Haskell package versioning policy
 -- (http://www.haskell.org/haskellwiki/Package_versioning_policy) for
 -- standards guiding when and how versions should be incremented.
-Version:             1.0.0
+Version:             1.0.1
 
 -- A short (one-line) description of the package.
 Synopsis:            A generic, derivable, haskell pretty printer.
@@ -22,7 +22,8 @@ Description: GenericPretty is a haskell library that provides support for automa
 	except it has extra whitespace.
 	.	
 	This requires the use of the new GHC.Generics features: <http://www.haskell.org/haskellwiki/Generics>.
-	These seem to be present in the GHC HEAD development snapshots >= 7.1.20110601.
+	As of 9.08.2011, these aren't present in the stable GHC releases, but 
+  seem to be present in the GHC HEAD development snapshots >= 7.1.20110601.
 	.
 	The Generics used are based on those described in the paper "A Generic Deriving Mechanism for Haskell" : 
 	<http://dreixel.net/research/pdf/gdmh.pdf> . The changes from the original paper on the ghc implementation
@@ -30,6 +31,9 @@ Description: GenericPretty is a haskell library that provides support for automa
 	.
 	For more info and examples of usage please see the README file included  in the package 
   and the API at <http://haggismcmutton.github.com/GenericPretty/>
+  .
+  Installation of the package is straightforward, if needed, instructions can be found,
+  for instance, here: <http://www.haskell.org/haskellwiki/Cabal/How_to_install_a_Cabal_package>.
 
 -- URL for the project homepage or repository.
 Homepage:            https://github.com/HaggisMcMutton/GenericPretty
