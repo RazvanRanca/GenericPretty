@@ -31,7 +31,7 @@ type Transition q = (q, Char, q)
 
 -- implement 'Out' so we can pretty print
 instance (Out a) => Out (FSM a) where
-	docPrec = genOut
+	docPrec = docPrecDefault
 
 --implementation needed for quickCheck generation of random values
 instance Arbitrary a => Arbitrary (FSM a) where
@@ -55,7 +55,7 @@ f = FSMCons([0,1,2,3,4],
 data BinaryTree a = EmptyBTree | BNode a (BinaryTree a) (BinaryTree a) deriving (Show, Generic)  
 
 instance (Out a) => Out (BinaryTree a) where
-	docPrec = genOut
+	docPrec = docPrecDefault
 
 instance (Arbitrary a) => Arbitrary (BinaryTree a) where
 	arbitrary = sized arbitTree
@@ -96,7 +96,7 @@ bt = mkBTree nums
 data RecordTree a = RNode {val :: a, children :: [RecordTree a]} deriving (Show, Generic)  
 
 instance (Out a) => Out (RecordTree a) where
-	docPrec = genOut
+	docPrec = docPrecDefault
 
 instance (Arbitrary a) => Arbitrary (RecordTree a) where
 	arbitrary = sized arbitTree
@@ -121,7 +121,7 @@ data InfixTree a = ILeaf a a | (InfixTree a) :*: (InfixTree a) | (InfixTree a) :
 		deriving (Show, Generic)  
 		
 instance (Out a) => Out (InfixTree a) where
-	docPrec = genOut
+	docPrec = docPrecDefault
 
 instance (Arbitrary a) => Arbitrary (InfixTree a) where
 	arbitrary = sized arbitTree
@@ -146,7 +146,7 @@ data InfixRecordTree a = IRLeaf (Wrap a) | (:^:) {left :: InfixRecordTree a, rig
 			deriving (Show, Generic)  
 			
 instance (Out a) => Out (InfixRecordTree a) where
-	docPrec = genOut
+	docPrec = docPrecDefault
 	
 instance (Arbitrary a) => Arbitrary (InfixRecordTree a) where
 	arbitrary = sized arbitTree
@@ -169,7 +169,7 @@ checkInfixRecordTree _ a = removeSpaces (pretty a) == removeSpaces (show a)
 data Wrap a = Wrap a deriving (Show, Generic)
 
 instance Out a => Out (Wrap a) where
-	docPrec = genOut
+	docPrec = docPrecDefault
 	
 instance Arbitrary a => Arbitrary (Wrap a) where
 	arbitrary = liftM Wrap arbitrary

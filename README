@@ -1,25 +1,80 @@
-GenericPretty. A Generic, Derivable, Haskell Pretty Printer
+*******************************************************************************
+*     GenericPretty
+*     A Generic, Derivable, Haskell Pretty Printer
+*******************************************************************************
+
+===============================================================================
+========================== Description ========================================
 ===============================================================================
 
-GenericPretty is a haskell library that provides support for automatic
-derivation of pretty printing functions on user defined data types.
+GenericPretty is a Haskell library that supports automatic
+derivation of pretty printing functions on user defined data
+types.
 
-The Pretty library [1] is used underneath, the work is done over "Doc" types.
+The form of geenrics used is based on that introduced in the paper:
+Magalhaes, Dijkstra, Jeuring, and Loh,
+A Generic Deriving Mechanism for Haskell,
+3'rd ACM Symposium on Haskell, pp. 37-48, September 2010,
+  http://dx.doi.org/10.1145/1863523.1863529.
+Changes from the original paper in the GHC implementation
+are described here:
+  http://www.haskell.org/haskellwiki/Generics#Changes_from_the_paper.
 
-The output provided by the library functions is identical to that of 
-Prelude.show, except it has extra whitespace.
-	
-This library requires the use of the new GHC.Generics features [2]
-As of 9.08.2011, these aren't present in the stable GHC releases, but 
-seem to be present in the GHC HEAD development snapshots >= 7.1.20110601.
+This package requires the use of the new GHC.Generics features:
+  http://www.haskell.org/haskellwiki/Generics
+present from GHC 7.2.
+Use of these features is indicated by the DeriveGeneric pragma
+or the flag -XDeriveGeneric.
 
-The Generics used are based on those described in the paper 
-"A Generic Deriving Mechanism for Haskell" [3].
-There are however several changes between the mechanism described in the
-paper and the one implemented in GHC [4].
+Pretty printing produces values of type Pretty.Doc, using
+the Pretty library
+  http://www.haskell.org/ghc/docs/7.0.4/html/libraries/ghc-7.0.4/Pretty.html.
 
-I find examples are the best aid in understanding. So, here is a  
-haskell source file, called 'SimpleTest.hs'
+The Pretty library plans to incorporate a Style datatype to control details
+of printing (such as line length).  The library MyPretty is provided as a
+thin wrapper around the Pretty library, to support Style related features.
+Once the Pretty library supports Style, MyPretty will become obsolete and
+be replaced by Pretty.
+
+The output provided is a pretty printed version of that provided by
+Prelude.show.  That is, rendering the document provided by this pretty
+printer yields an output identical to that of Prelude.show, except
+for extra whitespace.
+
+The generics mechanism works on all haskell datatypes except for 
+constrained datatypes.
+That is to say, datatypes which have a context will fail. 
+For instance,
+  data (Eq a) => Constr a = Constr a  deriving (Generic)
+will fail because of the (Eq a) context.
+  
+===============================================================================
+===================== Installation Instructions ===============================
+===============================================================================
+
+The package is installed in the same way as any other package. The steps are:
+  0. Make sure you have a version of ghc >= 7.2 installed and that you can 
+     use the 'runhaskell' command from the command line.
+  1. Download and unpack "GenericPretty-1.1.8.tar.gz"
+  2. Move to the correct directory: 
+      $ cd GenericPretty-1.1.8
+  3. Run the following haskell commands to install the library globally:
+      $ runhaskell Setup configure 
+      $ runhaskell Setup build
+      $ runhaskell Setup install
+     
+     The last command requires root access, so you might need to run is as:
+      $ sudo runhaskell Setup install
+  
+If something went wrong, you can check this page for more info, 
+look at manual installation: 
+  http://www.haskell.org/haskellwiki/Cabal/How_to_install_a_Cabal_package
+
+===============================================================================
+============================== Basic Example ==================================
+===============================================================================
+
+Here is a haskell source file, called 'SimpleTest.hs'
 ----------------------------------------------------
 {-# LANGUAGE DeriveGeneric #-}
 
@@ -28,7 +83,7 @@ import Text.PrettyPrint.GenericPretty
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
 
 instance (Out a) => Out (Tree a) where
-	docPrec = genOut
+	docPrec = docPrecDefault
 
 tree1 :: Tree Int
 tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 
@@ -39,10 +94,13 @@ main = pp tree1
 The flag DeriveGeneric must be given to GHC. This can be done as above, 
 in a 'LANGUAGE' pragma, or manually by compiling with 'ghc -XDeriveGeneric'.
 
-As can be seen, to use the library one must simply import it, derive 'Generic' 
-on the custom data type, and write an instance of 'Out' using 'genOut'.
+As can be seen, to use the library you must simply import it, derive Generic
+on the custom data type by writing
+  "deriving (Generic)"
+and write an instance of Out implementing 'docPrec' as
+  "docPrec = docPrecDefault"
 
-Then one can use the pretty printing functions, such as 'pp' and 'pretty'.
+Then you can use the pretty printing functions, such as 'pp' and 'pretty'.
 
 Compiling and running the file is simple and gives the following result.
 -----------------------------
@@ -50,36 +108,111 @@ $ ghc SimpleTest.hs
 $ SimpleTest
 
 Node (Node (Leaf 333333) (Leaf (-555555)))
-     (Node (Node (Node (Leaf 888888) (Leaf 57575757)) (Leaf (-14141414)))
+     (Node (Node (Node (Leaf 888888) (Leaf 57575757))
+                 (Leaf (-14141414)))
            (Leaf 7777777))
 ---------------------------
 If we replaced the main function with 'main = ppLen 30 tree1', 
 the result would instead be:
-
+-----------------------------
 Node (Node (Leaf 333333)
            (Leaf (-555555)))
      (Node (Node (Node (Leaf 888888)
                        (Leaf 57575757))
                  (Leaf (-14141414)))
            (Leaf 7777777))
-		   
-In this case the output tries to remain under 30 characters/line, if possible, 
-while always maintaining correct indentation.
+-------------------------------
+In this case the output tries to remain under 30 characters/line, 
+if possible, while always maintaining correct indentation.
 
-Customizing the pretty printed results is also straightforward, as in the
+===============================================================================
+================= The 'ppStyle' and 'prettyStyle' functions ===================
+===============================================================================
+
+The 'ppStyle' function lets you further customize the output
+by giving a 'Style' which consists of the line length, the number of ribbons 
+per line and the mode to use.
+
+The 'prettyStyle' function does the same thing except it outputs a String
+instead of an IO() operation.
+
+A ribbon length is the maximum length of non-indentation text per line.
+So if I used a line length of 80 and 2 ribbons per line than I would have a
+maximum of 40 non-indentation characters on any line.
+
+The mode tells 'Pretty' how to render the result. There are 4 options:
+  1. PageMode - the default rendering
+  2. ZigZagMode - zig-zag cuts
+  3. LeftMode - there is no indentation and no maximum line length
+  4. OneLineMode - everything is put on one line	
+
+The most interesting one is the ZigZagMode. 
+Modifying the running example we get:
+--------------------------------------
+{-# LANGUAGE DeriveGeneric #-}
+
+import Text.PrettyPrint.GenericPretty
+import Text.PrettyPrint.MyPretty
+
+data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
+
+instance (Out a) => Out (Tree a) where
+	docPrec = docPrecDefault
+
+tree1 :: Tree Int
+tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 
+		(Leaf 57575757))(Leaf (-14141414)))(Leaf 7777777))
+			
+zigStyle :: Style
+zigStyle = Style {mode = ZigZagMode, lineLength = 30, ribbonsPerLine = 1.5}
+
+main = ppStyle zigStyle tree1
+--------------------------------------
+We import "MyPretty" to gain access to the "Style" functionality.
+Then we proceed to define the 'zigStyle' using a maximum line length of 30,
+1.5 ribbonsPerLine and the ZigZagMode.
+
+Running the program, we get:
+-------------------------------------
+Node (Node (Leaf 333333)
+
+/////
+      (Leaf (-555555)))
+(Node (Node (Node (Leaf 888888)
+
+/////
+             (Leaf 57575757))
+       (Leaf (-14141414)))
+ (Leaf 7777777))
+-------------------------------------
+Notice that the "/" show us the direction in which the rows below have been 
+moved (left in this case) and the number of "/"s indicate the number of 
+characters that the rows were moved(in this case 5 characters to the left).
+  
+So the last 3 lines are 10 characters to the left compared to where they 
+would be if we had no maximum line length.
+
+===============================================================================
+======================= Full Customization Example ============================
+===============================================================================
+
+While the previous approach provides us some with some options as to the 
+format of the pretty printed result, sometimes you need even more control.
+
+Fully customizing the pretty printed results is straightforward, as in the
 following example called 'CustomTest.hs'
 ----------------------------
 {-# LANGUAGE DeriveGeneric #-}
 
 import Text.PrettyPrint.GenericPretty
-import Pretty
+import Text.PrettyPrint.MyPretty
 
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
 
 instance (Out a) => Out (Tree a) where
-  docPrec n (Leaf a) =  parens $ text "customLeaf" <+> docPrec n a
-  docPrec n (Node a b) = parens $ text "customNode" $$ nest 1 (docPrec n a) 
-                                                    $$ nest 1 (docPrec n b)
+  doc (Leaf a) =  parens $ text "customLeaf" <+> doc a
+  doc (Node a b) = parens $ text "customNode" $$ nest 1 (doc a) 
+                                                    $$ nest 1 (doc b)
 
 tree1 :: Tree Int
 tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 
@@ -87,9 +220,12 @@ tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888)
 			
 main = pp tree1
 ------------------------------
-Here we import the library 'Pretty' and use it directly to define docPrec.
-By running the above we get a tree with a minimum of indentation:
+Here we import the library 'MyPretty' and use it directly to define doc.
+We could have manually defined 'docPrec' or 'docList' as well if we wanted. 
+As it is now they are inferred from our definition of doc.
 
+By running the above custom definition we get a tree with little indentation:
+-----------------------------------
 (customNode
   (customNode
     (customLeaf 333333)
@@ -101,22 +237,28 @@ By running the above we get a tree with a minimum of indentation:
         (customLeaf 57575757))
       (customLeaf -14141414))
     (customLeaf 7777777)))
-
 -----------------------------------
-The above 'Tree' examples can be found in 'TestSuite/SimpleTest.hs' 
-and 'TestSuite/CustomTest.hs'. More involved examples integrated 
-with QuickCheck can be found in 'TestSuite/Tests.hs'.
-
-Further information can be found in the API at 
-http://haggismcmutton.github.com/GenericPretty/ and in the source code itself.
-===============================================================================
-
-Please send any questions/suggestions to:
-Razvan Ranca <ranca.razvan@gmail.com>
+The syntax used in the definition is the one used in both the Pretty and the
+Text.PrettyPrint.HughesPJ libraries:
+  http://www.haskell.org/ghc/docs/7.0.4/html/libraries/ghc-7.0.4/Pretty.html
+  http://hackage.haskell.org/packages/archive/pretty/1.1.0.0/doc/html/Text-PrettyPrint-HughesPJ.html
+The second one however is better documented.
 
 ===============================================================================
+========================= Further Info ========================================
+===============================================================================
 
-[1] http://www.haskell.org/ghc/docs/7.0.4/html/libraries/ghc-7.0.4/Pretty.html
-[2] http://www.haskell.org/haskellwiki/Generics
-[3] http://dreixel.net/research/pdf/gdmh.pdf
-[4] http://www.haskell.org/haskellwiki/Generics#Changes_from_the_paper
+The above 'Tree' examples can be found in 'TestSuite/SimpleTest.hs',
+'TestSuite.ZigZagTest.hs' and 'TestSuite/CustomTest.hs'. More involved 
+examples integrated with QuickCheck can be found in 'TestSuite/Tests.hs'.
+
+Further information can be found in the API:
+  http://hackage.haskell.org/packages/archive/GenericPretty/1.1.8/doc/html/Text-PrettyPrint-GenericPretty.html
+and in the source code itself.
+
+===============================================================================
+============================ Contact ==========================================
+===============================================================================
+
+Please send any questions/suggestions/issues to:
+  Razvan Ranca - ranca.razvan@gmail.com
