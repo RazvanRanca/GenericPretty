@@ -55,9 +55,9 @@ will fail because of the (Eq a) context.
 The package is installed in the same way as any other package. The steps are:
   0. Make sure you have a version of ghc >= 7.2 installed and that you can 
      use the 'runhaskell' command from the command line.
-  1. Download and unpack "GenericPretty-1.1.8.tar.gz"
+  1. Download and unpack "GenericPretty-1.1.9.tar.gz"
   2. Move to the correct directory: 
-      $ cd GenericPretty-1.1.8
+      $ cd GenericPretty-1.1.9
   3. Run the following haskell commands to install the library globally:
       $ runhaskell Setup configure 
       $ runhaskell Setup build
@@ -82,8 +82,7 @@ import Text.PrettyPrint.GenericPretty
 
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
 
-instance (Out a) => Out (Tree a) where
-	docPrec = docPrecDefault
+instance (Out a) => Out (Tree a)
 
 tree1 :: Tree Int
 tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 
@@ -95,10 +94,9 @@ The flag DeriveGeneric must be given to GHC. This can be done as above,
 in a 'LANGUAGE' pragma, or manually by compiling with 'ghc -XDeriveGeneric'.
 
 As can be seen, to use the library you must simply import it, derive Generic
-on the custom data type by writing
+on the custom data type by typing
   "deriving (Generic)"
-and write an instance of Out implementing 'docPrec' as
-  "docPrec = docPrecDefault"
+and writing an empty instance of Out.
 
 Then you can use the pretty printing functions, such as 'pp' and 'pretty'.
 
@@ -156,8 +154,7 @@ import Text.PrettyPrint.MyPretty
 
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
 
-instance (Out a) => Out (Tree a) where
-	docPrec = docPrecDefault
+instance (Out a) => Out (Tree a)
 
 tree1 :: Tree Int
 tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 
@@ -213,7 +210,8 @@ instance (Out a) => Out (Tree a) where
   doc (Leaf a) =  parens $ text "customLeaf" <+> doc a
   doc (Node a b) = parens $ text "customNode" $$ nest 1 (doc a) 
                                                     $$ nest 1 (doc b)
-
+  docPrec _ = doc
+  
 tree1 :: Tree Int
 tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 
 		(Leaf 57575757))(Leaf (-14141414)))(Leaf 7777777))
@@ -221,8 +219,18 @@ tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888)
 main = pp tree1
 ------------------------------
 Here we import the library 'MyPretty' and use it directly to define doc.
-We could have manually defined 'docPrec' or 'docList' as well if we wanted. 
-As it is now they are inferred from our definition of doc.
+We then define 'docPrec' in terms of 'doc', ignoring the precedence parameter.
+We could have manually defined 'docList' as well if we wanted. As it is now,
+'docList' is inferred from 'doc'.
+
+*****Note*****
+As opposed to the 'Show' class, 'doc' and 'docPrec' are NOT defined in term 
+of one another. This means that even after giving a custom definition for
+one of them, the other will retain the default behaviour. 
+If both are to be used, then custom definitions must be provided for both.
+
+For instance, in the above example, if we had ommited 'docPrec's definition,
+the result would have been identical to that of 'SimpleTest.hs'.
 
 By running the above custom definition we get a tree with little indentation:
 -----------------------------------
@@ -242,7 +250,6 @@ The syntax used in the definition is the one used in both the Pretty and the
 Text.PrettyPrint.HughesPJ libraries:
   http://www.haskell.org/ghc/docs/7.0.4/html/libraries/ghc-7.0.4/Pretty.html
   http://hackage.haskell.org/packages/archive/pretty/1.1.0.0/doc/html/Text-PrettyPrint-HughesPJ.html
-The second one however is better documented.
 
 ===============================================================================
 ========================= Further Info ========================================
@@ -253,7 +260,7 @@ The above 'Tree' examples can be found in 'TestSuite/SimpleTest.hs',
 examples integrated with QuickCheck can be found in 'TestSuite/Tests.hs'.
 
 Further information can be found in the API:
-  http://hackage.haskell.org/packages/archive/GenericPretty/1.1.8/doc/html/Text-PrettyPrint-GenericPretty.html
+  http://hackage.haskell.org/packages/archive/GenericPretty/1.1.9/doc/html/Text-PrettyPrint-GenericPretty.html
 and in the source code itself.
 
 ===============================================================================

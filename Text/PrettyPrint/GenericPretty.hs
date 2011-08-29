@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE TypeOperators, FlexibleInstances, FlexibleContexts, DefaultSignatures #-}
 
 {-|
   GenericPretty is a Haskell library that supports automatic
@@ -12,12 +12,12 @@
 		
 	For examples of usage please see the README file included in the package.
   
-  For more information see the HackageDB project page: <http://hackage.haskell.org/package/GenericPretty-1.1.8> 
+  For more information see the HackageDB project page: <http://hackage.haskell.org/package/GenericPretty-1.1.9> 
 -}
 
 module Text.PrettyPrint.GenericPretty 
                       (
-                      Out(..), docPrecDefault, 
+                      Out(..), 
                       pp, ppLen, ppStyle, pretty, prettyLen, prettyStyle, fullPP, 
                       Generic,
                       outputIO, outputStr
@@ -89,11 +89,15 @@ class Out a where
                   -- Function application has precedence @10@. 
           -> a    -- ^ the value to be converted to a 'String'
           -> Doc  -- ^ the resulting Doc
+  default docPrec :: (Generic a ,GOut (Rep a)) => Int -> a -> Doc
+  docPrec n x = sep $ out1 (from x) Pref n False
   
   -- | 'doc' is the equivalent of 'Prelude.show'
   --
   -- This is a specialised variant of 'docPrec', using precedence context zero.
   doc :: a -> Doc
+  default doc :: (Generic a ,GOut (Rep a)) => a -> Doc
+  doc x = sep $ out1 (from x) Pref 0 False
   
   -- | 'docList' is the equivalent of 'Prelude.showList'.
   --
@@ -103,32 +107,8 @@ class Out a where
   -- the 'Char' type, where values of type 'String' should be shown
   -- in double quotes, rather than between square brackets.
   docList :: [a] -> Doc
-  
-  doc = docPrec 0
-  docPrec _ = doc
   docList = docListWith doc
 
--- | Default generic 'docPrec' method. 
---
--- Converts the type into a sum of products and passes it on to the generic
--- pretty printing functions, finally it concatenates all of the Doc's
---
--- It can be used in code to define the instance for 'Out'.
---
--- For instance, given the declaration: 
---
--- > data Tree a =  Leaf a  |  Node (Tree a) (Tree a) deriving (Generic)
---
--- The user would need to write an instance declaration like:
---
--- > instance (Out a) => Out (Tree a) where
--- >   docPrec = docPrecDefault
---
--- After doing this, the user can now pretty printing function like 'pp' and 'pretty'
--- on data of type Tree
-docPrecDefault :: (Generic a ,GOut (Rep a)) => Int -> a -> Doc
-docPrecDefault n x = sep $ out1 (from x) Pref n False
-  
 -- used to define docList, creates output identical to that of show for general list types
 docListWith :: (a -> Doc) -> [a] -> Doc
 docListWith f = brackets . fcat . punctuate comma . map f
@@ -160,12 +140,12 @@ data Type = Rec | Pref | Inf String
 -- so can't be an instance of 'Out'
 class GOut f where
   -- |'out1' is the (*->*) kind equivalent of 'docPrec'
-  out1 :: f x 		-- The sum of products representation of the user's custom type
+  out1 :: f x 	-- The sum of products representation of the user's custom type
 		  -> Type   -- The type of multiplication. Record, Prefix or Infix.
 		  -> Int    -- The operator precedence, determines wether to wrap stuff in parens.
 		  -> Bool   -- A flag, marks wether the constructor directly above was wrapped in parens.
-					-- Used to determine correct indentation
-		  -> [Doc] -- The result. Each Doc could be on a newline, depending on available space.
+                -- Used to determine correct indentation
+		  -> [Doc]  -- The result. Each Doc could be on a newline, depending on available space.
   -- |'isNullary' marks nullary constructors, so that we don't put parens around them
   isNullary :: f x -> Bool
   
@@ -378,37 +358,39 @@ pp = ppStyle defaultStyle
 -- define some instances of Out making sure to generate output identical to 'show' modulo the extra whitespace
 instance Out () where
   doc _ = text "()"
+  docPrec _ = doc
   
 instance Out Char where
-	doc a = char '\'' <> (text.middle.show $ a) <> char '\''
-	docList xs = text $ show xs
-			
-instance Out Integer where
-	docPrec n x
-		| n/=0 && x<0 = parens $ integer x
-		| otherwise = integer x
-
+  doc a = char '\'' <> (text.middle.show $ a) <> char '\''
+  docPrec _ = doc
+  docList xs = text $ show xs
+  			
 instance Out Int where
-   docPrec n x
-	| n/=0 && x<0 = parens $ int x
-	| otherwise = int x
+  docPrec n x
+      | n/=0 && x<0 = parens $ int x
+      | otherwise = int x
+  doc = docPrec 0
 
 instance Out Float where
-   docPrec n x
-	| n/=0 && x<0 = parens $ float x
-	| otherwise = float x
+  docPrec n x
+      | n/=0 && x<0 = parens $ float x
+      | otherwise = float x
+  doc = docPrec 0
 
 instance Out Double where
-   docPrec n x
-	| n/=0 && x<0 = parens $ double x
-	| otherwise = double x
+  docPrec n x
+      | n/=0 && x<0 = parens $ double x
+      | otherwise = double x
+  doc = docPrec 0
   
 instance Out a => Out [a] where
   doc = docList
+  docPrec _ = doc
   
 instance Out Bool where
     doc True = text "True"
     doc False = text "False"
+    docPrec _ = doc
 
 instance Out a => Out (Maybe a) where
   docPrec n Nothing = text "Nothing"
@@ -417,6 +399,7 @@ instance Out a => Out (Maybe a) where
 	|otherwise = result
 	  where
 		result = text "Just" <+> docPrec 10 x
+  doc = docPrec 0
 
 instance (Out a, Out b) => Out (Either a b) where
   docPrec n (Left x)
@@ -429,79 +412,34 @@ instance (Out a, Out b) => Out (Either a b) where
 	| otherwise = result
 	  where
 		result = text "Right" <+> docPrec 10 y
+  doc = docPrec 0
 
 instance (Out a, Out b) => Out (a, b) where
     doc (a,b) = parens (sep [doc a <> comma, doc b])
+    docPrec _ = doc
 	
 instance (Out a, Out b, Out c) => Out (a, b, c) where
     doc (a,b,c) = parens (sep [doc a <> comma, doc b <> comma, doc c])
+    docPrec _ = doc
 
 instance (Out a, Out b, Out c, Out d) => Out (a, b, c, d) where
     doc (a,b,c,d) = parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d])
+    docPrec _ = doc
 
 instance (Out a, Out b, Out c, Out d, Out e) =>	 Out (a, b, c, d, e) where
     doc (a,b,c,d,e) = parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d <> comma, doc e])
+    docPrec _ = doc
 
 instance (Out a, Out b, Out c, Out d, Out e, Out f) 
 	=> Out (a, b, c, d, e, f) where
-		 doc (a, b, c, d, e, f) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, 
-						 doc d <> comma, doc e <> comma, doc f])
+      doc (a, b, c, d, e, f) = 
+        parens (sep [ doc a <> comma, doc b <> comma, doc c <> comma, 
+                      doc d <> comma, doc e <> comma, doc f])
+      docPrec _ = doc
       
 instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g) 
 	=> Out (a, b, c, d, e, f, g) where
-		 doc (a, b, c, d, e, f, g) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, 
-                   doc d <> comma, doc e <> comma, doc f <> comma, doc g])
-              
-instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g, Out h) 
-	=> Out (a, b, c, d, e, f, g, h) where
-		 doc (a, b, c, d, e, f, g, h) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, 
-                   doc d <> comma, doc e <> comma, doc f <> comma, doc g <> comma, doc h])
-              
-instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g, Out h, Out i) 
-	=> Out (a, b, c, d, e, f, g, h, i) where
-		 doc (a, b, c, d, e, f, g, h, i) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d <> comma, 
-                   doc e <> comma, doc f <> comma, doc g <> comma, doc h <> comma, doc i])
-              
-instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g, Out h, Out i, Out j) 
-	=> Out (a, b, c, d, e, f, g, h, i, j) where
-		 doc (a, b, c, d, e, f, g, h, i, j) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d <> comma, 
-                   doc e <> comma, doc f <> comma, doc g <> comma, doc h <> comma, doc i <> comma, doc j])
-              
-instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g, Out h, Out i, Out j, Out k) 
-	=> Out (a, b, c, d, e, f, g, h, i, j, k) where
-		 doc (a, b, c, d, e, f, g, h, i, j, k) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d <> comma, doc e<> comma, 
-                   doc f <> comma, doc g <> comma, doc h <> comma, doc i <> comma, doc j <> comma, doc k])
-              
-instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g, Out h, Out i, Out j, Out k, Out l) 
-	=> Out (a, b, c, d, e, f, g, h, i, j, k, l) where
-		 doc (a, b, c, d, e, f, g, h, i, j, k, l) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d <> comma, doc e <> comma, 
-					doc f <> comma, doc g <> comma, doc h <> comma, doc i <> comma, doc j <> comma, 
-					doc k <> comma, doc l])
-              
-instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g, Out h, Out i, Out j, Out k, Out l, Out m) 
-	=> Out (a, b, c, d, e, f, g, h, i, j, k, l, m) where
-		 doc (a, b, c, d, e, f, g, h, i, j, k, l, m) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d <> comma, doc e <> comma, 
-                   doc f <> comma, doc g <> comma, doc h <> comma, doc i <> comma, doc j <> comma, 
-                   doc k <> comma, doc l <> comma, doc m])
-              
-instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g, Out h, Out i, Out j, Out k, Out l, Out m, Out n) 
-	=> Out (a, b, c, d, e, f, g, h, i, j, k, l, m, n) where
-		 doc (a, b, c, d, e, f, g, h, i, j, k, l, m, n) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d <> comma, doc e <> comma, 
-                   doc f <> comma, doc g <> comma, doc h <> comma, doc i <> comma, doc j <> comma, 
-                   doc k <> comma, doc l <> comma, doc m <> comma, doc n])
-              
-instance (Out a, Out b, Out c, Out d, Out e, Out f, Out g, Out h, Out i, Out j, Out k, Out l, Out m, Out n, Out o) 
-	=> Out (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) where
-		 doc (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) = 
-			parens (sep [doc a <> comma, doc b <> comma, doc c <> comma, doc d <> comma, doc e <> comma, 
-                   doc f <> comma, doc g <> comma, doc h <> comma, doc i <> comma, doc j <> comma, 
-                   doc k <> comma, doc l <> comma, doc m <> comma, doc n <> comma, doc o])
+      doc (a, b, c, d, e, f, g) = 
+        parens (sep [ doc a <> comma, doc b <> comma, doc c <> comma, 
+                      doc d <> comma, doc e <> comma, doc f <> comma, doc g])
+      docPrec _ = doc

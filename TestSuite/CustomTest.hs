@@ -9,6 +9,7 @@ instance (Out a) => Out (Tree a) where
   doc (Leaf a) =  parens $ text "customLeaf" <+> doc a
   doc (Node a b) = parens $ text "customNode" $$ nest 1 (doc a) 
                                               $$ nest 1 (doc b)
+  docPrec _ = doc
 
 tree1 :: Tree Int
 tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888) 

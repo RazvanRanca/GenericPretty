@@ -30,8 +30,7 @@ type Alphabet = String
 type Transition q = (q, Char, q)
 
 -- implement 'Out' so we can pretty print
-instance (Out a) => Out (FSM a) where
-	docPrec = docPrecDefault
+instance (Out a) => Out (FSM a)
 
 --implementation needed for quickCheck generation of random values
 instance Arbitrary a => Arbitrary (FSM a) where
@@ -54,8 +53,7 @@ f = FSMCons([0,1,2,3,4],
 -- Binary Tree data type
 data BinaryTree a = EmptyBTree | BNode a (BinaryTree a) (BinaryTree a) deriving (Show, Generic)  
 
-instance (Out a) => Out (BinaryTree a) where
-	docPrec = docPrecDefault
+instance (Out a) => Out (BinaryTree a)
 
 instance (Arbitrary a) => Arbitrary (BinaryTree a) where
 	arbitrary = sized arbitTree
@@ -95,8 +93,7 @@ bt = mkBTree nums
 -- Tree using record syntax
 data RecordTree a = RNode {val :: a, children :: [RecordTree a]} deriving (Show, Generic)  
 
-instance (Out a) => Out (RecordTree a) where
-	docPrec = docPrecDefault
+instance (Out a) => Out (RecordTree a)
 
 instance (Arbitrary a) => Arbitrary (RecordTree a) where
 	arbitrary = sized arbitTree
@@ -120,8 +117,7 @@ infixr 3 :+:
 data InfixTree a = ILeaf a a | (InfixTree a) :*: (InfixTree a) | (InfixTree a) :+: (InfixTree a) 
 		deriving (Show, Generic)  
 		
-instance (Out a) => Out (InfixTree a) where
-	docPrec = docPrecDefault
+instance (Out a) => Out (InfixTree a)
 
 instance (Arbitrary a) => Arbitrary (InfixTree a) where
 	arbitrary = sized arbitTree
@@ -145,8 +141,7 @@ infixr 5 :^:
 data InfixRecordTree a = IRLeaf (Wrap a) | (:^:) {left :: InfixRecordTree a, right :: InfixRecordTree a} 
 			deriving (Show, Generic)  
 			
-instance (Out a) => Out (InfixRecordTree a) where
-	docPrec = docPrecDefault
+instance (Out a) => Out (InfixRecordTree a)
 	
 instance (Arbitrary a) => Arbitrary (InfixRecordTree a) where
 	arbitrary = sized arbitTree
@@ -162,14 +157,13 @@ irt :: InfixRecordTree Int
 irt = IRLeaf  (Wrap 5454544) :^: (IRLeaf (Wrap (-5375738)) :^: ((IRLeaf  (Wrap 699879) :^: 
 		(IRLeaf (Wrap (-2332323)) :^: IRLeaf (Wrap 676765))) :^: IRLeaf (Wrap 99999)))
 
-checkInfixRecordTree :: InfixRecordTree Int -> InfixRecordTree Int -> Bool
+checkInfixRecordTree :: InfixRecordTree Float -> InfixRecordTree Float -> Bool
 checkInfixRecordTree _ a = removeSpaces (pretty a) == removeSpaces (show a)
 	
 -- just a very simple user defined type that is used in IRTree
 data Wrap a = Wrap a deriving (Show, Generic)
 
-instance Out a => Out (Wrap a) where
-	docPrec = docPrecDefault
+instance Out a => Out (Wrap a)
 	
 instance Arbitrary a => Arbitrary (Wrap a) where
 	arbitrary = liftM Wrap arbitrary
@@ -178,6 +172,6 @@ allTests = [	("FSM (Maybe Int)", quickCheck checkFSM),
 				("BinaryTree (Char)", quickCheck checkBinaryTree),
 				("RecordTree (String)", quickCheck checkRecordTree),
 				("InfixTree (Either Int Char)", quickCheck checkInfixTree),
-				("InfixRecordTree (Int)", quickCheck checkInfixRecordTree)]
+				("InfixRecordTree (Float)", quickCheck checkInfixRecordTree)]
 				
 main = mapM_ (\(s,r) -> printf "%-30s: " s >> r) allTests			
