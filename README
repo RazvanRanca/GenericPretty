@@ -11,7 +11,7 @@ GenericPretty is a Haskell library that supports automatic
 derivation of pretty printing functions on user defined data
 types.
 
-The form of geenrics used is based on that introduced in the paper:
+The form of generics used is based on that introduced in the paper:
 Magalhaes, Dijkstra, Jeuring, and Loh,
 A Generic Deriving Mechanism for Haskell,
 3'rd ACM Symposium on Haskell, pp. 37-48, September 2010,
