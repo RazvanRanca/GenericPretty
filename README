@@ -18,10 +18,10 @@ A Generic Deriving Mechanism for Haskell,
   http://dx.doi.org/10.1145/1863523.1863529.
 Changes from the original paper in the GHC implementation
 are described here:
-  http://www.haskell.org/haskellwiki/Generics#Changes_from_the_paper.
+  http://www.haskell.org/haskellwiki/GHC.Generics#Changes_from_the_paper.
 
 This package requires the use of the new GHC.Generics features:
-  http://www.haskell.org/haskellwiki/Generics
+  http://www.haskell.org/haskellwiki/GHC.Generics
 present from GHC 7.2.
 Use of these features is indicated by the DeriveGeneric pragma
 or the flag -XDeriveGeneric.
