@@ -11,7 +11,7 @@ GenericPretty is a Haskell library that supports automatic
 derivation of pretty printing functions on user defined data
 types.
 
-The form of generics used is based on that introduced in the paper:
+The form of geenrics used is based on that introduced in the paper:
 Magalhaes, Dijkstra, Jeuring, and Loh,
 A Generic Deriving Mechanism for Haskell,
 3'rd ACM Symposium on Haskell, pp. 37-48, September 2010,
@@ -26,16 +26,10 @@ present from GHC 7.2.
 Use of these features is indicated by the DeriveGeneric pragma
 or the flag -XDeriveGeneric.
 
-Pretty printing produces values of type Pretty.Doc, using
-the Pretty library
-  http://www.haskell.org/ghc/docs/7.0.4/html/libraries/ghc-7.0.4/Pretty.html.
-
-The Pretty library plans to incorporate a Style datatype to control details
-of printing (such as line length).  The library MyPretty is provided as a
-thin wrapper around the Pretty library, to support Style related features.
-Once the Pretty library supports Style, MyPretty will become obsolete and
-be replaced by Pretty.
-
+Pretty printing produces values of type Text.PrettyPrint.Doc, using
+the Text.PrettyPrint library
+  http://www.haskell.org/ghc/docs/latest/html/libraries/pretty-1.1.1.0/Text-PrettyPrint.html.
+  
 The output provided is a pretty printed version of that provided by
 Prelude.show.  That is, rendering the document provided by this pretty
 printer yields an output identical to that of Prelude.show, except
@@ -52,12 +46,17 @@ will fail because of the (Eq a) context.
 ===================== Installation Instructions ===============================
 ===============================================================================
 
-The package is installed in the same way as any other package. The steps are:
-  0. Make sure you have a version of ghc >= 7.2 installed and that you can 
+The package is installed in the same way as any other package. 
+If you have cabal, you can simply do:
+  $ cabal update
+  $ cabal install GenericPretty
+
+Otherwise, the steps are:
+  0. Make sure you have a version of ghc >= 7.4 installed and that you can 
      use the 'runhaskell' command from the command line.
-  1. Download and unpack "GenericPretty-1.1.9.tar.gz"
-  2. Move to the correct directory: 
-      $ cd GenericPretty-1.1.9
+  1. Download and unpack "GenericPretty-1.2.0.tar.gz"
+  2. Move to the correct directory:
+      $ cd GenericPretty-1.2.0
   3. Run the following haskell commands to install the library globally:
       $ runhaskell Setup configure 
       $ runhaskell Setup build
@@ -150,7 +149,7 @@ Modifying the running example we get:
 {-# LANGUAGE DeriveGeneric #-}
 
 import Text.PrettyPrint.GenericPretty
-import Text.PrettyPrint.MyPretty
+import Text.PrettyPrint
 
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
 
@@ -165,7 +164,7 @@ zigStyle = Style {mode = ZigZagMode, lineLength = 30, ribbonsPerLine = 1.5}
 
 main = ppStyle zigStyle tree1
 --------------------------------------
-We import "MyPretty" to gain access to the "Style" functionality.
+We import "Text.PrettyPrint" to gain access to the "Style" functionality.
 Then we proceed to define the 'zigStyle' using a maximum line length of 30,
 1.5 ribbonsPerLine and the ZigZagMode.
 
@@ -202,7 +201,7 @@ following example called 'CustomTest.hs'
 {-# LANGUAGE DeriveGeneric #-}
 
 import Text.PrettyPrint.GenericPretty
-import Text.PrettyPrint.MyPretty
+import Text.PrettyPrint
 
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
 
@@ -218,7 +217,7 @@ tree1 = Node (Node (Leaf 333333) (Leaf (-555555)))(Node (Node(Node(Leaf 888888)
 			
 main = pp tree1
 ------------------------------
-Here we import the library 'MyPretty' and use it directly to define doc.
+Here we import the library 'Text.PrettyPrint' and use it directly to define doc.
 We then define 'docPrec' in terms of 'doc', ignoring the precedence parameter.
 We could have manually defined 'docList' as well if we wanted. As it is now,
 'docList' is inferred from 'doc'.
@@ -246,10 +245,9 @@ By running the above custom definition we get a tree with little indentation:
       (customLeaf -14141414))
     (customLeaf 7777777)))
 -----------------------------------
-The syntax used in the definition is the one used in both the Pretty and the
-Text.PrettyPrint.HughesPJ libraries:
-  http://www.haskell.org/ghc/docs/7.0.4/html/libraries/ghc-7.0.4/Pretty.html
-  http://hackage.haskell.org/packages/archive/pretty/1.1.0.0/doc/html/Text-PrettyPrint-HughesPJ.html
+The details of the syntax used above can be found in the 
+Text.PrettyPrint library:
+  http://www.haskell.org/ghc/docs/latest/html/libraries/pretty-1.1.1.0/Text-PrettyPrint.html
 
 ===============================================================================
 ========================= Further Info ========================================
@@ -260,7 +258,7 @@ The above 'Tree' examples can be found in 'TestSuite/SimpleTest.hs',
 examples integrated with QuickCheck can be found in 'TestSuite/Tests.hs'.
 
 Further information can be found in the API:
-  http://hackage.haskell.org/packages/archive/GenericPretty/1.1.9/doc/html/Text-PrettyPrint-GenericPretty.html
+  http://hackage.haskell.org/packages/archive/GenericPretty/latest/doc/html/Text-PrettyPrint-GenericPretty.html
 and in the source code itself.
 
 ===============================================================================

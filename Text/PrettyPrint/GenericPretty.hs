@@ -12,7 +12,7 @@
 		
 	For examples of usage please see the README file included in the package.
   
-  For more information see the HackageDB project page: <http://hackage.haskell.org/package/GenericPretty-1.1.9> 
+  For more information see the HackageDB project page: <http://hackage.haskell.org/package/GenericPretty> 
 -}
 
 module Text.PrettyPrint.GenericPretty 
@@ -20,14 +20,14 @@ module Text.PrettyPrint.GenericPretty
                       Out(..), 
                       pp, ppLen, ppStyle, pretty, prettyLen, prettyStyle, fullPP, 
                       Generic,
-                      outputIO, outputStr
+                      outputIO, outputStr,
                       ) where
 
 import Data.List
 import GHC.Generics
 import Data.Char
 import FastString
-import Text.PrettyPrint.MyPretty
+import Text.PrettyPrint
 
 -- | The class 'Out' is the equivalent of 'Prelude.Show'
 --
@@ -274,10 +274,9 @@ outputIO td act =  do
                       act
   where
     decode :: TextDetails -> String
-    decode (PStr s1) = unpackFS s1
-    decode (LStr s1 _) = unpackLitString s1
-    decode (Chr c)  = [c]
     decode (Str s) = s
+    decode (PStr s1) = s1
+    decode (Chr c)  = [c]
     
 -- | Utility function that handles the text conversion for 'fullPP'. 
 --
@@ -287,10 +286,9 @@ outputStr :: TextDetails -> String -> String
 outputStr td str = decode td ++ str
   where
     decode :: TextDetails -> String
-    decode (PStr s1) = unpackFS s1
-    decode (LStr s1 _) = unpackLitString s1
-    decode (Chr c)  = [c]
     decode (Str s) = s
+    decode (PStr s1) = s1
+    decode (Chr c)  = [c]
 
 -- | Customizable pretty printer 
 --
@@ -370,6 +368,12 @@ instance Out Int where
       | n/=0 && x<0 = parens $ int x
       | otherwise = int x
   doc = docPrec 0
+  
+instance Out Integer where
+  docPrec n x
+      | n/=0 && x<0 = parens $ integer x
+      | otherwise = integer x
+  doc = docPrec 0
 
 instance Out Float where
   docPrec n x
@@ -381,6 +385,12 @@ instance Out Double where
   docPrec n x
       | n/=0 && x<0 = parens $ double x
       | otherwise = double x
+  doc = docPrec 0
+  
+instance Out Rational where
+  docPrec n x
+      | n/=0 && x<0 = parens $ rational x
+      | otherwise = rational x
   doc = docPrec 0
   
 instance Out a => Out [a] where

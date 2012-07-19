@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 
 import Text.PrettyPrint.GenericPretty
-import Text.PrettyPrint.MyPretty
+import Text.PrettyPrint
 
 data Tree a = Leaf a | Node (Tree a) (Tree a) deriving (Generic)
 
