@@ -26,7 +26,6 @@ module Text.PrettyPrint.GenericPretty
 import Data.List
 import GHC.Generics
 import Data.Char
-import FastString
 import Text.PrettyPrint
 
 -- | The class 'Out' is the equivalent of 'Prelude.Show'
