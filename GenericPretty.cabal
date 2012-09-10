@@ -86,7 +86,7 @@ Library
   Exposed-modules:     Text.PrettyPrint.GenericPretty
   
   -- Packages needed in order to build this package.
-  Build-depends: 	   base >= 3 && < 5, ghc-prim, ghc >= 7.4
+  Build-depends: 	   base >= 3 && < 5, ghc-prim, pretty
   
   -- Modules not exported by this package.
   -- Other-modules:       
