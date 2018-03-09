@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeOperators, FlexibleInstances, FlexibleContexts, DefaultSignatures #-}
+{-# LANGUAGE CPP #-}
 
 {-|
   GenericPretty is a Haskell library that supports automatic
@@ -23,6 +24,11 @@ module Text.PrettyPrint.GenericPretty
                       outputIO, outputStr,
                       ) where
 
+
+#if MIN_VERSION_base(4,11,0)
+-- Avoid name clash with Prelude.<> exported by post-SMP versions of base.
+import Prelude hiding ( (<>) )
+#endif
 import Data.List
 import GHC.Generics
 import Data.Char
