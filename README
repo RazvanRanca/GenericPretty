@@ -54,9 +54,9 @@ If you have cabal, you can simply do:
 Otherwise, the steps are:
   0. Make sure you have a version of ghc >= 7.4 installed and that you can 
      use the 'runhaskell' command from the command line.
-  1. Download and unpack "GenericPretty-1.2.0.tar.gz"
+  1. Download and unpack "GenericPretty-1.2.2.tar.gz"
   2. Move to the correct directory:
-      $ cd GenericPretty-1.2.0
+      $ cd GenericPretty-1.2.2
   3. Run the following haskell commands to install the library globally:
       $ runhaskell Setup configure 
       $ runhaskell Setup build
